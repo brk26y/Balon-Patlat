@@ -44,6 +44,7 @@ let currentTargetColor = null;
 
 // Persistent State
 let highestLevel = 1;
+let highestScore = 0;
 let currentTheme = 'theme-sky';
 let unlockedStickers = [];
 
@@ -173,10 +174,11 @@ function playFailSound() {
 
 function setRandomTargetColor() {
     currentTargetColor = COLORS[Math.floor(Math.random() * COLORS.length)];
-    targetBalloonIcon.className = 'balloon-icon ' + currentTargetColor.class;
+    targetBalloonIcon.className = 'balloon-icon size-medium ' + currentTargetColor.class;
 }
 
 function startGame() {
+    startBtn.disabled = true; // Spam tıklamayı önle
     initAudio();
     if (currentLevel === 1 || currentLevel > TOTAL_LEVELS || lives <= 0) {
         score = 0;
@@ -189,6 +191,7 @@ function startGame() {
     startScreen.classList.add('screen-slide-down');
     setTimeout(() => {
         startScreen.classList.remove('screen-slide-down');
+        startBtn.disabled = false;
         startLevel();
     }, 800);
 }
@@ -198,8 +201,15 @@ function retryLevel() {
     startLevel();
 }
 
+let animationFrameId = null;
+
 function startLevel() {
+    // Önceki seviyeden kalma veya peş peşe tıklamalardan oluşan bug'ları temizle (Memory Leak önlemi)
     gameActive = true;
+    clearInterval(gameInterval);
+    clearInterval(spawnInterval);
+    if (animationFrameId) cancelAnimationFrame(animationFrameId);
+    
     startScreen.classList.add('hidden');
     endScreen.classList.add('hidden');
     failScreen.classList.add('hidden');
@@ -219,7 +229,7 @@ function startLevel() {
     let spawnRate = Math.max(150, 350 - (currentLevel * 10)); 
     spawnInterval = setInterval(spawnBalloon, spawnRate);
     
-    requestAnimationFrame(updateBalloons);
+    updateBalloons();
 }
 
 function gameTick() {
@@ -252,7 +262,7 @@ function handleLevelFail(title, desc) {
     let hearts = '';
     for(let i=0; i<lives; i++) hearts += '❤️';
     for(let i=lives; i<MAX_LIVES; i++) hearts += '🤍';
-    if(failLivesDisplay) failLivesDisplay.textContent = `Kalan Can: ${hearts}`;
+    if(failLivesDisplay) failLivesDisplay.textContent = hearts;
     
     const failRetryBtn = document.getElementById('retry-btn');
     if(lives <= 0) {
@@ -277,6 +287,17 @@ function endLevel() {
     playScreen.classList.add('hidden');
     endScreen.classList.remove('hidden');
     finalScoreDisplay.textContent = score;
+    
+    const highestScoreDisplay = document.getElementById('highest-score-display');
+    if (highestScoreDisplay) {
+        if (score > highestScore) {
+            highestScore = score;
+            saveData();
+            highestScoreDisplay.innerHTML = `🌟 Yeni Rekor: ${highestScore} 🌟`;
+        } else {
+            highestScoreDisplay.innerHTML = `En İyi Skor: ${highestScore}`;
+        }
+    }
     
     if (currentLevel >= TOTAL_LEVELS) {
         endTitle.textContent = "Oyun Bitti! Harikasın!";
@@ -345,15 +366,6 @@ function spawnBalloon() {
     }
     balloon.classList.add(size.class);
     
-    // Start X position
-    const maxWidth = window.innerWidth > 500 ? 500 : window.innerWidth;
-    const balloonWidth = size.name === 'large' ? 90 : (size.name === 'medium' ? 70 : 50);
-    const minX = 10;
-    const maxX = maxWidth - balloonWidth - 10;
-    const startX = Math.random() * (maxX - minX) + minX;
-    
-    balloon.style.left = `${startX}px`;
-    
     // Physics base parameters
     const baseSpeed = 2.5 + (currentLevel * 0.2);
     const speedVariation = Math.random() * 2.0;
@@ -366,6 +378,20 @@ function spawnBalloon() {
         wobbleAmount = Math.min((currentLevel - 2) * 3, 50);
         wobbleSpeed = 0.02 + (Math.random() * 0.04);
     }
+
+    // Start X position
+    const maxWidth = window.innerWidth > 500 ? 500 : window.innerWidth;
+    const balloonWidth = size.name === 'large' ? 90 : (size.name === 'medium' ? 70 : 50);
+    
+    // Sağ ve sol kenarlardan taşmayı engellemek için wobble (sallanma) mesafesini hesaba katalım
+    const minX = wobbleAmount + 5;
+    const maxX = maxWidth - balloonWidth - wobbleAmount - 5;
+    
+    // Eğer ekran çok darsa (güvenlik payı)
+    const safeMaxX = Math.max(minX, maxX);
+    const startX = Math.random() * (safeMaxX - minX) + minX;
+    
+    balloon.style.left = `${startX}px`;
     
     const bData = {
         element: balloon,
@@ -445,27 +471,32 @@ function updateBalloons() {
     if (!gameActive) return;
     
     for (let i = balloons.length - 1; i >= 0; i--) {
-        const b = balloons[i];
-        if (b.popped) continue;
+        const bData = balloons[i];
         
-        b.y -= b.speed;
-        
-        if (b.wobbleAmount > 0) {
-            b.wobbleTime += b.wobbleSpeed;
-            b.xOffset = Math.sin(b.wobbleTime) * b.wobbleAmount;
+        if (bData.popped) {
+            balloons.splice(i, 1);
+            continue;
         }
         
-        b.element.style.transform = `translate3d(${b.xOffset}px, ${b.y - (window.innerHeight + 150)}px, 0)`;
+        bData.y -= bData.speed;
         
-        if (b.y < -150) {
-            if (b.element.parentNode) {
-                b.element.parentNode.removeChild(b.element);
+        bData.wobbleTime += bData.wobbleSpeed;
+        bData.xOffset = Math.sin(bData.wobbleTime) * bData.wobbleAmount;
+        
+        // CSS transform update (using translate3d for GPU acceleration)
+        bData.element.style.transform = `translate3d(${bData.baseX + bData.xOffset}px, ${bData.y - window.innerHeight - 150}px, 0)`;
+        
+        // Remove if off screen
+        if (bData.y < -150) {
+            bData.popped = true;
+            if (bData.element.parentNode) {
+                bData.element.parentNode.removeChild(bData.element);
             }
             balloons.splice(i, 1);
         }
     }
     
-    requestAnimationFrame(updateBalloons);
+    animationFrameId = requestAnimationFrame(updateBalloons);
 }
 
 function updateUI() {
@@ -484,6 +515,7 @@ function loadData() {
     if(savedData) {
         const data = JSON.parse(savedData);
         highestLevel = data.highestLevel || 1;
+        highestScore = data.highestScore || 0;
         currentTheme = data.currentTheme || 'theme-sky';
         unlockedStickers = data.unlockedStickers || [];
     }
@@ -493,7 +525,7 @@ function loadData() {
 
 function saveData() {
     localStorage.setItem('balloonPopSave', JSON.stringify({
-        highestLevel, currentTheme, unlockedStickers
+        highestLevel, highestScore, currentTheme, unlockedStickers
     }));
 }
 

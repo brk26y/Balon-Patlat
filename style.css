@@ -134,6 +134,12 @@ p {
     margin-bottom: 5px;
 }
 
+.active-theme {
+    background: #FFD700 !important;
+    border-color: #FFA500 !important;
+    transform: scale(1.05);
+}
+
 .btn {
     background: #FF6B6B;
     color: white;
@@ -204,11 +210,12 @@ p {
 /* Balloon Styles */
 .balloon {
     position: absolute;
-    bottom: -150px;
-    border-radius: 50% 50% 50% 50% / 40% 40% 60% 60%;
-    box-shadow: inset -10px -10px 15px rgba(0,0,0,0.1);
-    pointer-events: auto; /* Clickable */
+    bottom: -150px; /* Ekranın altında başlar */
+    border-radius: 50%;
     cursor: pointer;
+    pointer-events: auto; /* Clickable (Very important because parent is none) */
+    box-shadow: 0 4px 8px rgba(0,0,0,0.2); /* Optimized simple shadow */
+    will-change: transform; /* Hint for GPU acceleration */
     display: flex;
     justify-content: center;
     align-items: flex-end;
@@ -308,6 +315,63 @@ p {
     color: #FF6B6B;
     cursor: pointer;
     box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+.game-dashboard {
+    position: relative;
+    z-index: 10;
+    width: 95%;
+    margin: 15px auto 0;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.dash-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.dash-item {
+    background: rgba(255, 255, 255, 0.95);
+    padding: 8px 15px;
+    border-radius: 25px;
+    font-size: 1.3rem;
+    font-weight: bold;
+    color: #444;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.15), inset 0 -3px 0 rgba(0,0,0,0.1);
+    border: 2px solid #fff;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.level-badge { color: #FF9800; }
+.time-badge { color: #F44336; min-width: 80px; justify-content: center; }
+.lives-badge { 
+    background: transparent; 
+    padding: 0;
+    border: none;
+    box-shadow: none;
+    font-size: 1.6rem;
+    letter-spacing: 2px;
+    filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2));
+}
+
+.dash-bottom {
+    display: flex;
+    justify-content: center;
+}
+
+.score-badge {
+    background: linear-gradient(135deg, #FFD700, #FFA500);
+    color: white;
+    border: 3px solid #FFF;
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
+    padding: 8px 40px;
+    font-size: 1.6rem;
+    border-radius: 30px;
 }
 
 #target-indicator {

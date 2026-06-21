@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Balon Patlatma</title>
     <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="style.css?v=5">
     <link rel="manifest" href="manifest.json">
     <script>
         if ('serviceWorker' in navigator) {
@@ -24,13 +24,11 @@
             <div class="cloud"></div>
         </div>
 
-        <!-- Settings/Audio Controls -->
-        <div id="audio-controls">
-            <button id="toggle-sound" class="audio-btn">🔊 Ses: Açık</button>
-        </div>
-
         <!-- Başlangıç / Menü Ekranı -->
         <div id="start-screen" class="screen">
+            <!-- Sound Toggle - Ana Menüye Taşındı -->
+            <button id="toggle-sound" class="btn btn-small" style="position: absolute; top: 15px; right: 15px; z-index: 1000; background: white; color: #333; padding: 8px 15px; font-size: 1rem; border: 2px solid #ccc; border-radius: 20px;">🔊 Ses: Açık</button>
+            
             <h1>Balon Patlatma</h1>
             <h2 id="rank-display" style="color: #FFD700; margin-bottom: 10px; text-shadow: 2px 2px 0 rgba(0,0,0,0.2);">Acemi Patlatıcı 🐣</h2>
             <p style="margin-bottom: 15px;">Seviye <span id="current-level-display">1</span></p>
@@ -83,11 +81,15 @@
 
         <!-- Oyun Ekranı -->
         <div id="play-screen" class="screen hidden">
-            <div style="text-align: center; font-size: 1.5rem; margin-top: 5px; margin-bottom: 5px; text-shadow: 1px 1px 0 rgba(0,0,0,0.2);" id="lives-display">❤️❤️❤️</div>
-            <div id="game-info">
-                <div class="info-box">Bölüm: <span id="current-level">1</span></div>
-                <div class="info-box score-box">Puan: <span id="score">0</span></div>
-                <div class="info-box time-box">Süre: <span id="time">30</span></div>
+            <div class="game-dashboard">
+                <div class="dash-top">
+                    <div class="dash-item level-badge">🌟 <span id="level-display">1</span></div>
+                    <div class="dash-item lives-badge" id="lives-display">❤️❤️❤️</div>
+                    <div class="dash-item time-badge">⏱️ <span id="time-display">30</span></div>
+                </div>
+                <div class="dash-bottom">
+                    <div class="dash-item score-badge">💎 <span id="score-display">0</span></div>
+                </div>
             </div>
             
             <div id="balloon-area"></div>
@@ -102,7 +104,8 @@
         <!-- Bölüm Sonu Ekranı -->
         <div id="end-screen" class="screen hidden">
             <h1 id="end-title">Tebrikler!</h1>
-            <p>Puanın: <span id="final-score">0</span></p>
+            <p style="font-size: 1.8rem; font-weight: bold; color: #2196F3; margin-bottom: 5px;">Puan: <span id="final-score">0</span></p>
+            <p style="font-size: 1.3rem; color: #FF9800; font-weight: bold; margin-top: 0; margin-bottom: 15px;" id="highest-score-display">En İyi Skor: 0</p>
             <div style="display: flex; gap: 10px; justify-content: center;">
                 <button id="home-from-end-btn" class="btn btn-small" style="background:#FF6B6B; font-size: 1.2rem; padding: 10px 15px;">🏠 Menü</button>
                 <button id="next-level-btn" class="btn btn-small" style="font-size: 1.2rem; padding: 10px 15px;">Sonraki Bölüm</button>
@@ -110,16 +113,24 @@
         </div>
 
         <!-- Yanma Ekranı -->
-        <div id="fail-screen" class="screen hidden">
-            <h2 id="fail-title">Süre Doldu!</h2>
-            <p id="fail-desc">Maalesef hedef balonu yeterince patlatamadın.</p>
-            <p style="font-size:1.5rem; margin-top: 15px;" id="fail-lives-display">Kalan Can: ❤️❤️🤍</p>
-            <div style="display: flex; gap: 10px; justify-content: center; margin-top: 20px;">
-                <button id="home-from-fail-btn" class="btn btn-small" style="background:#FF6B6B; font-size: 1.2rem; padding: 10px 15px;">🏠 Menü</button>
-                <button id="retry-btn" class="btn btn-small" style="font-size: 1.2rem; padding: 10px 15px;">Tekrar Dene</button>
+        <div id="fail-screen" class="screen hidden" style="background: rgba(0,0,0,0.6);">
+            <div class="fail-card">
+                <div class="fail-icon">💔</div>
+                <h1 id="fail-title" class="fail-title">Olamaz!</h1>
+                <p id="fail-desc" class="fail-desc">Biraz daha hızlı olmalısın.</p>
+                
+                <div class="lives-status">
+                    <span style="font-size:1.1rem;">Kalan Canın</span>
+                    <span id="fail-lives-display" class="lives-hearts">❤️❤️❤️</span>
+                </div>
+                
+                <div class="action-buttons">
+                    <button id="home-from-fail-btn" class="btn btn-secondary">🏠 Menü</button>
+                    <button id="retry-btn" class="btn btn-primary">Tekrar Dene 🔄</button>
+                </div>
             </div>
         </div>
     </div>
-    <script src="app.js"></script>
+    <script src="app.js?v=5"></script>
 </body>
 </html>

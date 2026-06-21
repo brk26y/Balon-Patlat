@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Balon Patlatma</title>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <link rel="manifest" href="manifest.json">
+    <script>
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('./sw.js')
+            .then(() => console.log("Service Worker Registered"));
+        }
+    </script>
+</head>
+<body>
+    <div id="game-container">
+        <!-- Arka Plan Bulutları -->
+        <div class="clouds">
+            <div class="cloud"></div>
+            <div class="cloud"></div>
+            <div class="cloud"></div>
+            <div class="cloud"></div>
+        </div>
+
+        <!-- Settings/Audio Controls -->
+        <div id="audio-controls">
+            <button id="toggle-sound" class="audio-btn">🔊 Ses: Açık</button>
+        </div>
+
+        <!-- Başlangıç / Menü Ekranı -->
+        <div id="start-screen" class="screen">
+            <h1>Balon Patlatma</h1>
+            <h2 id="rank-display" style="color: #FFD700; margin-bottom: 10px; text-shadow: 2px 2px 0 rgba(0,0,0,0.2);">Acemi Patlatıcı 🐣</h2>
+            <p style="margin-bottom: 15px;">Seviye <span id="current-level-display">1</span></p>
+            
+            <div class="rules-table">
+                <h3>Oyun Kuralları</h3>
+                <ul>
+                    <li>🎯 Hedefteki rengi patlat!</li>
+                    <li>🎈 Küçük Balon: <b>+3 Puan</b></li>
+                    <li>🎈 Orta Balon: <b>+2 Puan</b></li>
+                    <li>🎈 Büyük Balon: <b>+1 Puan</b></li>
+                    <li style="color:#FF6B6B; margin-top:5px;">❌ Yanlış Renk: <b>-5 Puan</b></li>
+                </ul>
+            </div>
+
+            <button id="start-btn" class="btn">Oyna</button>
+            <div style="display: flex; gap: 10px; margin-top: 20px;">
+                <button id="collection-btn" class="btn btn-small" style="background:#4ECDC4; padding: 10px 20px; font-size: 1.2rem;">Koleksiyon</button>
+                <button id="themes-btn" class="btn btn-small" style="background:#b388ff; padding: 10px 20px; font-size: 1.2rem;">Temalar</button>
+            </div>
+        </div>
+
+        <!-- Koleksiyon Ekranı -->
+        <div id="collection-screen" class="screen hidden">
+            <h2>Koleksiyonum</h2>
+            <p>Açılan çıkartmalar burada birikecek!</p>
+            <div id="stickers-grid" class="grid-container">
+                <!-- Javascript ile doldurulacak -->
+            </div>
+            <button id="close-collection-btn" class="btn btn-small" style="margin-top: 20px;">Geri Dön</button>
+        </div>
+
+        <!-- Temalar Ekranı -->
+        <div id="themes-screen" class="screen hidden">
+            <h2>Oyun Temaları</h2>
+            <div id="themes-list" class="grid-container">
+                <!-- Javascript ile doldurulacak -->
+            </div>
+            <button id="close-themes-btn" class="btn btn-small" style="margin-top: 20px;">Geri Dön</button>
+        </div>
+
+        <!-- Başarı Kutlama Pop-up'ı -->
+        <div id="achievement-popup" class="hidden">
+            <div class="popup-content">
+                <h2 id="achievement-title">Yeni Çıkartma!</h2>
+                <div id="achievement-icon">🦁</div>
+                <button id="achievement-ok-btn" class="btn btn-small">Harika!</button>
+            </div>
+        </div>
+
+        <!-- Oyun Ekranı -->
+        <div id="play-screen" class="screen hidden">
+            <div style="text-align: center; font-size: 1.5rem; margin-top: 5px; margin-bottom: 5px; text-shadow: 1px 1px 0 rgba(0,0,0,0.2);" id="lives-display">❤️❤️❤️</div>
+            <div id="game-info">
+                <div class="info-box">Bölüm: <span id="current-level">1</span></div>
+                <div class="info-box score-box">Puan: <span id="score">0</span></div>
+                <div class="info-box time-box">Süre: <span id="time">30</span></div>
+            </div>
+            
+            <div id="balloon-area"></div>
+            
+            <!-- Target Color Indicator at Bottom -->
+            <div id="target-indicator">
+                <span>Hedef:</span>
+                <div id="target-balloon-icon" class="balloon-icon"></div>
+            </div>
+        </div>
+
+        <!-- Bölüm Sonu Ekranı -->
+        <div id="end-screen" class="screen hidden">
+            <h1 id="end-title">Tebrikler!</h1>
+            <p>Puanın: <span id="final-score">0</span></p>
+            <div style="display: flex; gap: 10px; justify-content: center;">
+                <button id="home-from-end-btn" class="btn btn-small" style="background:#FF6B6B; font-size: 1.2rem; padding: 10px 15px;">🏠 Menü</button>
+                <button id="next-level-btn" class="btn btn-small" style="font-size: 1.2rem; padding: 10px 15px;">Sonraki Bölüm</button>
+            </div>
+        </div>
+
+        <!-- Yanma Ekranı -->
+        <div id="fail-screen" class="screen hidden">
+            <h2 id="fail-title">Süre Doldu!</h2>
+            <p id="fail-desc">Maalesef hedef balonu yeterince patlatamadın.</p>
+            <p style="font-size:1.5rem; margin-top: 15px;" id="fail-lives-display">Kalan Can: ❤️❤️🤍</p>
+            <div style="display: flex; gap: 10px; justify-content: center; margin-top: 20px;">
+                <button id="home-from-fail-btn" class="btn btn-small" style="background:#FF6B6B; font-size: 1.2rem; padding: 10px 15px;">🏠 Menü</button>
+                <button id="retry-btn" class="btn btn-small" style="font-size: 1.2rem; padding: 10px 15px;">Tekrar Dene</button>
+            </div>
+        </div>
+    </div>
+    <script src="app.js"></script>
+</body>
+</html>

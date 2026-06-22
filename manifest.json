@@ -6,16 +6,19 @@
   "background_color": "#87CEEB",
   "theme_color": "#FF6B6B",
   "orientation": "portrait",
+  "description": "Eğlenceli ve renkli bir balon patlatma oyunu. Bombalara dikkat et ve canlarını koru!",
   "icons": [
     {
-      "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='45' r='35' fill='%23FF6B6B'/><path d='M45 80 L55 80 L50 90 Z' fill='%23FF6B6B'/></svg>",
+      "src": "icon-192.png",
       "sizes": "192x192",
-      "type": "image/svg+xml"
+      "type": "image/png",
+      "purpose": "any maskable"
     },
     {
-      "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='45' r='35' fill='%23FF6B6B'/><path d='M45 80 L55 80 L50 90 Z' fill='%23FF6B6B'/></svg>",
+      "src": "icon-512.png",
       "sizes": "512x512",
-      "type": "image/svg+xml"
+      "type": "image/png",
+      "purpose": "any maskable"
     }
   ]
 }

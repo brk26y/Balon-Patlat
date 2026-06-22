@@ -342,9 +342,11 @@ function spawnBalloon() {
     // Random color and size
     let isBomb = false;
     let color;
-    // Bomba çıkma ihtimalini %15'ten %6'ya düşürdük
-    if (currentLevel >= 4 && Math.random() < 0.06) {
+    
+    if (currentLevel >= 4 && Math.random() < 0.08) {
         isBomb = true;
+        // Bombalar artık kandırmaca için her zaman HEDEF RENKTE çıkacak
+        color = currentTargetColor ? currentTargetColor : COLORS[Math.floor(Math.random() * COLORS.length)];
     } else {
         // Hedef rengin çıkma ihtimalini %40 civarına sabitleyelim
         if (currentTargetColor && Math.random() < 0.4) {
@@ -356,15 +358,17 @@ function spawnBalloon() {
     
     const size = SIZES[Math.floor(Math.random() * SIZES.length)];
     
+    // Renk sınıfını her durumda ekliyoruz (Bomba olsa bile hedef renkte görünecek)
+    balloon.classList.add(color.class);
+    balloon.classList.add(size.class);
+    
     if (isBomb) {
-        balloon.classList.add('balloon-bomb');
-        balloon.innerHTML = '💣';
+        // Artık siyah bir top yerine, sadece ortasında bomba simgesi olan hedef renkli bir balon
+        balloon.innerHTML = '<span style="font-size: 2rem; padding-bottom: 15px; text-shadow: 0 0 8px rgba(255,255,255,1);">💣</span>';
         balloon.dataset.points = -30;
     } else {
-        balloon.classList.add(color.class);
         balloon.dataset.points = size.points;
     }
-    balloon.classList.add(size.class);
     
     // Physics base parameters
     const baseSpeed = 2.5 + (currentLevel * 0.2);

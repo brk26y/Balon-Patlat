@@ -31,7 +31,11 @@
             
             <h1>Balon Patlatma</h1>
             <h2 id="rank-display" style="color: #FFD700; margin-bottom: 10px; text-shadow: 2px 2px 0 rgba(0,0,0,0.2);">Acemi Patlatıcı 🐣</h2>
-            <p style="margin-bottom: 15px;">Seviye <span id="current-level-display">1</span></p>
+            <p style="margin-bottom: 15px; display: flex; align-items: center; justify-content: center; gap: 15px; font-size: 1.2rem;">
+                <button id="prev-lvl-btn" class="btn btn-small" style="padding: 0; border-radius: 50%; font-size: 1.5rem; width: 40px; height: 40px; display: flex; justify-content: center; align-items: center; background: #FFB7B2; border: 3px solid #fff;">&lt;</button>
+                <span style="min-width: 100px; text-align: center; font-weight: bold; color: white; text-shadow: 1px 1px 2px rgba(0,0,0,0.5);">Seviye <span id="current-level-display">1</span></span>
+                <button id="next-lvl-btn" class="btn btn-small" style="padding: 0; border-radius: 50%; font-size: 1.5rem; width: 40px; height: 40px; display: flex; justify-content: center; align-items: center; background: #FFB7B2; border: 3px solid #fff;">&gt;</button>
+            </p>
             
             <div class="rules-table">
                 <h3>Oyun Kuralları</h3>
@@ -44,7 +48,7 @@
                 </ul>
             </div>
 
-            <button id="start-btn" class="btn">Oyna</button>
+            <button id="start-btn" class="btn pulse-btn">Oyna</button>
             <div style="display: flex; gap: 10px; margin-top: 20px;">
                 <button id="collection-btn" class="btn btn-small" style="background:#4ECDC4; padding: 10px 20px; font-size: 1.2rem;">Koleksiyon</button>
                 <button id="themes-btn" class="btn btn-small" style="background:#b388ff; padding: 10px 20px; font-size: 1.2rem;">Temalar</button>
@@ -85,7 +89,7 @@
                 <div class="dash-top">
                     <div class="dash-item level-badge">🌟 <span id="level-display">1</span></div>
                     <div class="dash-item lives-badge" id="lives-display">❤️❤️❤️</div>
-                    <div class="dash-item time-badge">⏱️ <span id="time-display">30</span></div>
+                    <div class="dash-item time-badge">⏱️ <span id="time-display">60</span></div>
                 </div>
                 <div class="dash-bottom">
                     <div class="dash-item score-badge">💎 <span id="score-display">0</span></div>

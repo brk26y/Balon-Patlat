@@ -214,7 +214,7 @@ p {
     border-radius: 50%;
     cursor: pointer;
     pointer-events: auto; /* Clickable (Very important because parent is none) */
-    box-shadow: 0 4px 8px rgba(0,0,0,0.2); /* Optimized simple shadow */
+    box-shadow: inset -10px -10px 15px rgba(0,0,0,0.3), inset 10px 10px 20px rgba(255,255,255,0.7), 0 8px 15px rgba(0,0,0,0.4); /* Premium 3D Glossy Shadow */
     will-change: transform; /* Hint for GPU acceleration */
     display: flex;
     justify-content: center;
@@ -265,20 +265,85 @@ p {
     transition: all 0.15s ease-out;
 }
 
-/* Floating animation helper classes */
+/* Premium Particle & Floating Text Animations */
 .particle {
     position: absolute;
-    width: 10px;
-    height: 10px;
-    background: yellow;
+    width: 12px;
+    height: 12px;
     border-radius: 50%;
     pointer-events: none;
-    animation: popParticle 0.5s ease-out forwards;
+    z-index: 90;
+    animation: explodeParticle 0.7s cubic-bezier(0.1, 0.8, 0.2, 1) forwards;
 }
 
-@keyframes popParticle {
-    0% { transform: scale(1) translate(0, 0); opacity: 1; }
-    100% { transform: scale(0) translate(var(--tx), var(--ty)); opacity: 0; }
+@keyframes explodeParticle {
+    0% { transform: scale(1) translate(0, 0) rotate(0deg); opacity: 1; }
+    100% { transform: scale(0) translate(var(--tx), var(--ty)) rotate(var(--rot)); opacity: 0; }
+}
+
+.floating-text {
+    position: absolute;
+    font-size: 3rem;
+    font-weight: bold;
+    color: #FFF;
+    text-shadow: 2px 2px 0px #FF9800, -2px -2px 0px #FF9800, 2px -2px 0px #FF9800, -2px 2px 0px #FF9800, 0 8px 15px rgba(0,0,0,0.5);
+    pointer-events: none;
+    z-index: 100;
+    animation: floatUpText 1.2s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+}
+
+@keyframes floatUpText {
+    0% { transform: translateY(0) scale(0.5); opacity: 0; }
+    20% { transform: translateY(-30px) scale(1.2); opacity: 1; }
+    100% { transform: translateY(-100px) scale(1); opacity: 0; }
+}
+
+/* Screen Shake (Bomb Effect) */
+@keyframes screenShake {
+    0% { transform: translate(0, 0) rotate(0deg); }
+    20% { transform: translate(-15px, 10px) rotate(-2deg); }
+    40% { transform: translate(15px, -10px) rotate(2deg); }
+    60% { transform: translate(-15px, -10px) rotate(-2deg); }
+    80% { transform: translate(15px, 10px) rotate(2deg); }
+    100% { transform: translate(0, 0) rotate(0deg); }
+}
+
+.shake {
+    animation: screenShake 0.4s ease-in-out !important;
+}
+
+/* Score Bump (Juicy UI) */
+@keyframes scoreBump {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.4); }
+    100% { transform: scale(1); }
+}
+
+.score-bump {
+    animation: scoreBump 0.3s ease-out;
+    display: inline-block;
+}
+
+/* Button Pulse */
+@keyframes pulseBtn {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.05); box-shadow: 0 10px 0 #cc5555, 0 20px 25px rgba(0,0,0,0.3); }
+    100% { transform: scale(1); }
+}
+
+.pulse-btn {
+    animation: pulseBtn 1.5s infinite ease-in-out;
+}
+
+/* Spring Bounce for Menus */
+@keyframes bounceIn {
+    0% { transform: scale(0.8); opacity: 0; }
+    60% { transform: scale(1.05); opacity: 1; }
+    100% { transform: scale(1); opacity: 1; }
+}
+
+.screen:not(.hidden) {
+    animation: bounceIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
 .penalty-text {

@@ -1,6 +1,6 @@
 // Constants
 const TOTAL_LEVELS = 30;
-const ROUND_TIME = 30; // seconds
+const ROUND_TIME = 60; // seconds
 
 const COLORS = [
     { name: 'Kırmızı', class: 'balloon-red' },
@@ -92,12 +92,45 @@ retryBtn.addEventListener('click', retryLevel);
 const homeFromEndBtn = document.getElementById('home-from-end-btn');
 const homeFromFailBtn = document.getElementById('home-from-fail-btn');
 
+function updateMenuLevelDisplay() {
+    const lvlDisplay = document.getElementById('current-level-display');
+    if (lvlDisplay) lvlDisplay.textContent = currentLevel;
+}
+
+const prevLvlBtn = document.getElementById('prev-lvl-btn');
+const nextLvlBtn = document.getElementById('next-lvl-btn');
+
+if (prevLvlBtn) {
+    prevLvlBtn.addEventListener('click', () => {
+        if (currentLevel > 1) {
+            currentLevel--;
+            score = 0; // Manuel seviye değişiminde reset
+            lives = 3;
+            saveData();
+            updateMenuLevelDisplay();
+        }
+    });
+}
+
+if (nextLvlBtn) {
+    nextLvlBtn.addEventListener('click', () => {
+        if (currentLevel < highestLevel && currentLevel < TOTAL_LEVELS) {
+            currentLevel++;
+            score = 0; // Manuel seviye değişiminde reset
+            lives = 3;
+            saveData();
+            updateMenuLevelDisplay();
+        }
+    });
+}
+
 function returnToHome() {
     endScreen.classList.add('hidden');
     failScreen.classList.add('hidden');
     playScreen.classList.add('hidden');
     startScreen.classList.remove('hidden');
     updateRankDisplay();
+    updateMenuLevelDisplay();
 }
 
 if(homeFromEndBtn) homeFromEndBtn.addEventListener('click', returnToHome);
@@ -180,10 +213,11 @@ function setRandomTargetColor() {
 function startGame() {
     startBtn.disabled = true; // Spam tıklamayı önle
     initAudio();
-    if (currentLevel === 1 || currentLevel > TOTAL_LEVELS || lives <= 0) {
+    if (currentLevel > TOTAL_LEVELS || lives <= 0) {
         score = 0;
         currentLevel = 1;
         lives = 3;
+        saveData(); // Reseti kaydet
     }
     updateLivesDisplay();
     
@@ -253,6 +287,7 @@ function handleLevelFail(title, desc) {
     playFailSound();
     
     lives--;
+    saveData(); // Can kaybını kaydet
     updateLivesDisplay();
     
     document.getElementById('fail-title').textContent = title;
@@ -327,6 +362,7 @@ function nextLevel() {
     if (currentLevel < TOTAL_LEVELS) {
         currentLevel++;
         currentLevelDisplay.textContent = currentLevel;
+        saveData(); // Yeni seviyeyi kaydet
         startLevel();
     } else {
         currentLevel = 1;
@@ -336,6 +372,10 @@ function nextLevel() {
 }
 
 function spawnBalloon() {
+    // Kasıntı (Lag) ve Sekme Değiştirme (Background Tab) Bug'ını Önleme:
+    // Eğer ekranda çok fazla balon birikirse veya kullanıcı başka sekmeye geçerse balon üretmeyi durdur.
+    if (!gameActive || document.hidden || balloons.length > 35) return;
+
     const balloon = document.createElement('div');
     balloon.classList.add('balloon');
     
@@ -345,8 +385,8 @@ function spawnBalloon() {
     
     if (currentLevel >= 4 && Math.random() < 0.08) {
         isBomb = true;
-        // Bombalar artık kandırmaca için her zaman HEDEF RENKTE çıkacak
-        color = currentTargetColor ? currentTargetColor : COLORS[Math.floor(Math.random() * COLORS.length)];
+        // Bombalar artık sadece hedef renkte değil, RASTGELE herhangi bir balon renginde çıkacak (Zorluğu artırmak için)
+        color = COLORS[Math.floor(Math.random() * COLORS.length)];
     } else {
         // Hedef rengin çıkma ihtimalini %40 civarına sabitleyelim
         if (currentTargetColor && Math.random() < 0.4) {
@@ -417,16 +457,24 @@ function spawnBalloon() {
         bData.popped = true;
         
         // CHECK BOMB OR COLOR LOGIC
+        const clientX = e.clientX || (e.touches && e.touches[0] && e.touches[0].clientX) || bData.baseX;
+        const clientY = e.clientY || (e.touches && e.touches[0] && e.touches[0].clientY) || (window.innerHeight / 2);
+
         if (isBomb) {
             score = Math.max(0, score - 30);
             playWrongSound(); // Treat bomb as very wrong
+            
+            // Screen Shake (Juicy UX)
+            const container = document.getElementById('game-container');
+            container.classList.remove('shake');
+            void container.offsetWidth; // Reflow
+            container.classList.add('shake');
+            setTimeout(() => container.classList.remove('shake'), 400);
             
             // Floating penalty text
             const pText = document.createElement('div');
             pText.className = 'penalty-text';
             pText.textContent = '-30';
-            const clientX = e.clientX || (e.touches && e.touches[0] && e.touches[0].clientX) || bData.baseX;
-            const clientY = e.clientY || (e.touches && e.touches[0] && e.touches[0].clientY) || 200;
             pText.style.left = `${clientX}px`;
             pText.style.top = `${clientY}px`;
             document.body.appendChild(pText);
@@ -436,9 +484,20 @@ function spawnBalloon() {
         } else {
             if (color.name === currentTargetColor.name) {
                 // Correct Color
-                score += parseInt(balloon.dataset.points);
+                const pts = parseInt(balloon.dataset.points);
+                score += pts;
                 playPopSound();
                 setRandomTargetColor(); // Change target
+                
+                // Floating positive text (Juicy UX)
+                const pText = document.createElement('div');
+                pText.className = 'floating-text';
+                const comments = ["Harika!", "Süper!", "Mükemmel!", `+${pts}`];
+                pText.textContent = comments[Math.floor(Math.random() * comments.length)];
+                pText.style.left = `${clientX - 30}px`;
+                pText.style.top = `${clientY - 30}px`;
+                document.body.appendChild(pText);
+                setTimeout(() => pText.remove(), 1200);
             } else {
                 // Wrong Color
                 score -= 5;
@@ -454,7 +513,7 @@ function spawnBalloon() {
             return;
         }
         
-        createParticles(bData.baseX + bData.xOffset + balloonWidth/2, bData.y - window.innerHeight - 150 + balloonWidth/2);
+        createParticles(clientX, clientY, color);
         
         balloon.classList.add('pop-animation');
         setTimeout(() => {
@@ -506,10 +565,48 @@ function updateBalloons() {
 function updateUI() {
     levelDisplay.textContent = currentLevel;
     scoreDisplay.textContent = score;
+    
+    // Score Bump Animation (Juicy UX)
+    const badge = scoreDisplay.parentElement;
+    if (badge) {
+        badge.classList.remove('score-bump');
+        void badge.offsetWidth; // Trigger DOM reflow
+        badge.classList.add('score-bump');
+    }
 }
 
-function createParticles(x, y) {
-    // simplified for performance
+function createParticles(x, y, colorObj) {
+    if (!gameActive) return;
+    const colors = ['#FFD700', '#FF6B6B', '#4ECDC4', '#FFFFFF'];
+    const pColor = colorObj ? (
+        colorObj.class === 'balloon-red' ? '#FFB7B2' : 
+        colorObj.class === 'balloon-blue' ? '#A2B9EA' :
+        colorObj.class === 'balloon-green' ? '#B5EAD7' :
+        colorObj.class === 'balloon-yellow' ? '#FDFD96' :
+        colorObj.class === 'balloon-purple' ? '#D2B1F9' : '#FFF'
+    ) : '#FFF';
+                               
+    for (let i = 0; i < 8; i++) {
+        const p = document.createElement('div');
+        p.className = 'particle';
+        p.style.background = Math.random() > 0.5 ? pColor : colors[Math.floor(Math.random() * colors.length)];
+        p.style.left = `${x}px`;
+        p.style.top = `${y}px`;
+        
+        // Random explode physics
+        const angle = Math.random() * Math.PI * 2;
+        const velocity = 40 + Math.random() * 80;
+        const tx = Math.cos(angle) * velocity;
+        const ty = Math.sin(angle) * velocity;
+        const rot = Math.random() * 360;
+        
+        p.style.setProperty('--tx', `${tx}px`);
+        p.style.setProperty('--ty', `${ty}px`);
+        p.style.setProperty('--rot', `${rot}deg`);
+        
+        document.body.appendChild(p);
+        setTimeout(() => p.remove(), 700);
+    }
 }
 
 // --- Meta-Game Logic & UI ---
@@ -522,14 +619,23 @@ function loadData() {
         highestScore = data.highestScore || 0;
         currentTheme = data.currentTheme || 'theme-sky';
         unlockedStickers = data.unlockedStickers || [];
+        
+        // Kaldığı yerden devam etme verileri
+        currentLevel = data.currentLevel || 1;
+        score = data.score || 0;
+        lives = data.lives !== undefined ? data.lives : 3;
     }
     applyTheme(currentTheme);
     updateRankDisplay();
+    
+    // Ana menüdeki seviye yazısını güncelle
+    const lvlDisplay = document.getElementById('current-level-display');
+    if (lvlDisplay) lvlDisplay.textContent = currentLevel;
 }
 
 function saveData() {
     localStorage.setItem('balloonPopSave', JSON.stringify({
-        highestLevel, highestScore, currentTheme, unlockedStickers
+        highestLevel, highestScore, currentTheme, unlockedStickers, currentLevel, score, lives
     }));
 }
 

@@ -35,6 +35,7 @@ const THEMES = [
 // State
 let currentLevel = 1;
 let score = 0;
+let currentCombo = 0;
 let timeLeft = ROUND_TIME;
 let gameInterval = null;
 let spawnInterval = null;
@@ -240,6 +241,7 @@ let animationFrameId = null;
 function startLevel() {
     // Önceki seviyeden kalma veya peş peşe tıklamalardan oluşan bug'ları temizle (Memory Leak önlemi)
     gameActive = true;
+    currentCombo = 0;
     clearInterval(gameInterval);
     clearInterval(spawnInterval);
     if (animationFrameId) cancelAnimationFrame(animationFrameId);
@@ -461,6 +463,7 @@ function spawnBalloon() {
         const clientY = e.clientY || (e.touches && e.touches[0] && e.touches[0].clientY) || (window.innerHeight / 2);
 
         if (isBomb) {
+            currentCombo = 0;
             score = Math.max(0, score - 30);
             playWrongSound(); // Treat bomb as very wrong
             
@@ -484,11 +487,24 @@ function spawnBalloon() {
         } else {
             if (color.name === currentTargetColor.name) {
                 // Correct Color
-                const pts = parseInt(balloon.dataset.points);
+                currentCombo++;
+                const multiplier = currentCombo > 1 ? currentCombo : 1;
+                const pts = parseInt(balloon.dataset.points) * multiplier;
                 score += pts;
                 playPopSound();
                 setRandomTargetColor(); // Change target
                 
+                // Show Combo Text
+                if (currentCombo > 1) {
+                    const cText = document.createElement('div');
+                    cText.className = 'combo-text';
+                    cText.textContent = `COMBO x${currentCombo}!`;
+                    cText.style.left = `${clientX}px`;
+                    cText.style.top = `${clientY - 60}px`;
+                    document.body.appendChild(cText);
+                    setTimeout(() => cText.remove(), 1000);
+                }
+
                 // Floating positive text (Juicy UX)
                 const pText = document.createElement('div');
                 pText.className = 'floating-text';
@@ -500,6 +516,7 @@ function spawnBalloon() {
                 setTimeout(() => pText.remove(), 1200);
             } else {
                 // Wrong Color
+                currentCombo = 0;
                 score -= 5;
                 playWrongSound();
             }
@@ -782,3 +799,23 @@ function boardWipe() {
     balloons = [];
 }
 
+// --- Sparkle Trail Logic ---
+function createSparkle(x, y) {
+    if (!gameActive) return; // Sadece oyun sırasında
+    const sparkle = document.createElement('div');
+    sparkle.className = 'trail-sparkle';
+    sparkle.style.left = `${x}px`;
+    sparkle.style.top = `${y}px`;
+    document.body.appendChild(sparkle);
+    setTimeout(() => sparkle.remove(), 600);
+}
+
+document.addEventListener('mousemove', (e) => {
+    if(Math.random() > 0.4) createSparkle(e.clientX, e.clientY);
+});
+
+document.addEventListener('touchmove', (e) => {
+    if(e.touches.length > 0) {
+        if(Math.random() > 0.3) createSparkle(e.touches[0].clientX, e.touches[0].clientY);
+    }
+}, {passive: true});
